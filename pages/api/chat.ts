@@ -49,8 +49,8 @@ async function queryVideo(apiKey: string, query: string, context: string) {
 
   const assistantPrompt = `
         Você é um chatbot muito prestativo, que responde perguntas do usuário acerca de um determinado conteúdo de um vídeo, que será fornecido a seguir.
-        Não responsa nenhuma pergunta que não tenha relação com esse contexto. Se a pergunta não for relacionada a ele, diga que não tem capacidade de responder.
-        Se você não encontrar a resposta para a pergunta do usuário nesse contexto, diga que não tem informações suficientes para você responder.
+        Não responda nenhuma pergunta que não tenha relação com o conteúdo do vídeo. Se a pergunta não for relacionada a ele, diga que não encontrou a resposta para isso no vídeo.
+        Se você não encontrar a resposta para a pergunta do usuário nesse contexto, diga que não encontrou a resposta para isso no vídeo.
 
         conteúdo do vídeo: ${context}
     `;
