@@ -12,6 +12,7 @@ export const Button = ({ children, ...props }: ButtonProps) => {
       borderRadius="full"
       fontSize="sm"
       size={"sm"}
+      px="8"
       fontWeight="semi-bold"
       {...props}
     >
