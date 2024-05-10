@@ -29,7 +29,8 @@ export default async function handler(
 }
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-const MODEL_NAME = "gemini-1.5-pro-latest";
+// const MODEL_NAME = "gemini-1.5-pro-latest";
+const MODEL_NAME = "gemini-1.0-pro";
 
 async function queryVideo(apiKey: string, query: string, context: string) {
   const genAI = new GoogleGenerativeAI(apiKey);
