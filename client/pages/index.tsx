@@ -121,13 +121,13 @@ export const PageMain = () => {
       <Chakra.HStack
         w="full"
         maxW="720px"
-        h="15vh"
+        h="10vh"
         align="center"
         justify="space-between"
         borderBottom="1px"
         borderBottomColor="gray.600"
       >
-        <Chakra.Text>YouTube Video Chat</Chakra.Text>
+        <Chakra.Text>TalkToYouTube</Chakra.Text>
         <InputText
           value={state.apiKey}
           onChange={(e) => onChange("apiKey", e.target.value)}
