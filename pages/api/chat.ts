@@ -48,9 +48,11 @@ async function queryVideo(apiKey: string, query: string, context: string) {
   });
 
   const assistantPrompt = `
-        Você é um chatbot muito prestativo, que responde perguntas do usuário acerca de um derminado contexto, que será fornecido sempre junto da pergunta.
+        Você é um chatbot muito prestativo, que responde perguntas do usuário acerca de um derminado contexto, que será fornecido a seguir.
         Não responsa nenhuma pergunta que não tenha relação com esse contexto. Se a pergunta não for relacionada a ele, diga que não tem capacidade de responder.
-        Se você não encontrar a resposta para a pergunta do usuário nesse contexto, diga que não tem informações suficientes para você responder
+        Se você não encontrar a resposta para a pergunta do usuário nesse contexto, diga que não tem informações suficientes para você responder.
+
+        contexto: ${context}
     `;
 
   const chat = model.startChat({
@@ -60,10 +62,10 @@ async function queryVideo(apiKey: string, query: string, context: string) {
         parts: [{ text: assistantPrompt }],
       },
       {
-        role: "assistant",
+        role: "model",
         parts: [
           {
-            text: `Ok, irei fazer como o requisitado no prompt ${assistantPrompt}`,
+            text: `Ok, irei fazer como o requisitado!`,
           },
         ],
       },
@@ -82,10 +84,6 @@ async function queryVideo(apiKey: string, query: string, context: string) {
   });
 
   const userMessage = `
-        Responda a pergunta do usuário baseado no contexto: 
-        ${context}
-
-        Perunta do Usuário:
         ${query}
     `;
 
