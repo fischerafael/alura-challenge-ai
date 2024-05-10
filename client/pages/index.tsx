@@ -1,11 +1,25 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import * as Chakra from "@chakra-ui/react";
 import { InputText } from "../components/InputText";
 import { Button } from "../components/Button";
 import axios, { AxiosError } from "axios";
 import { InputTextArea } from "../components/InputTextArea";
 
-const initialState = {
+interface IState {
+  videoUrl: string;
+  videoId: string;
+  apiKey: string;
+  isLoading: boolean;
+  videoTranscript: string;
+  videoTitle: string;
+  videoDescription: string;
+  isOpenVideoDetails: boolean;
+  query: string;
+
+  responses: { content: string; role: "user" | "model" }[];
+}
+
+const initialState: IState = {
   videoUrl: "",
   videoId: "",
   apiKey: "",
@@ -15,11 +29,13 @@ const initialState = {
   videoDescription: "",
   isOpenVideoDetails: false,
   query: "",
-  response: "",
+  responses: [],
 };
 
 export const PageMain = () => {
   const [state, setState] = useState(initialState);
+
+  const ref = useRef<any>();
 
   const onChange = (key: string, value: string) => {
     setState((prev) => ({ ...prev, [key]: value }));
@@ -38,6 +54,23 @@ export const PageMain = () => {
 
   const onReset = () => {
     setState((prev) => ({ ...initialState, apiKey: prev.apiKey }));
+  };
+
+  const onCleanChat = () => {
+    setState((prev) => ({ ...prev, responses: [] }));
+  };
+
+  const onAddResponse = (newResponse: string, role: "model" | "user") => {
+    setState((prev) => ({
+      ...prev,
+      responses: [
+        ...prev.responses,
+        {
+          content: newResponse,
+          role: role,
+        },
+      ],
+    }));
   };
 
   const onExtractVideoId = async () => {
@@ -75,7 +108,8 @@ export const PageMain = () => {
     }
   };
 
-  const onQueryVideo = async () => {
+  const onQueryVideo = async (e: any) => {
+    e.preventDefault();
     try {
       onLoading(true);
       const { data: dataQueryResponse } = await api.post(
@@ -93,7 +127,9 @@ export const PageMain = () => {
         }
       );
       const response = dataQueryResponse.data.response;
-      onChange("response", response);
+      onAddResponse(state.query, "user");
+      onAddResponse(response, "model");
+      onChange("query", "");
     } catch (e: any) {
       const error = e?.response?.data?.error || e.message;
 
@@ -101,11 +137,6 @@ export const PageMain = () => {
     } finally {
       onLoading(false);
     }
-  };
-
-  const resetResposne = () => {
-    onChange("response", "");
-    onChange("query", "");
   };
 
   return (
@@ -222,39 +253,77 @@ export const PageMain = () => {
         </Chakra.HStack>
       </Chakra.VStack>
 
-      {!state.response && (
-        <Chakra.HStack w="full" align="flex-end" spacing="4" maxW="720px">
-          <InputTextArea
-            value={state.query}
-            onChange={(e) => onChange("query", e.target.value)}
-            w="full"
-            label="Pergunte qualquer coisa sobre o vídeo"
-            isDisabled={!state.apiKey}
-            borderRadius="8"
-            h="34px"
-          />
+      {state.responses.length !== 0 && (
+        <Chakra.VStack w="full" maxW="720px" gap="8">
+          {state.responses.map((res) => (
+            <Chakra.HStack
+              key={res.content}
+              w="full"
+              spacing="8"
+              align="flex-start"
+              p="8"
+              bg="gray.800"
+              borderRadius="16"
+            >
+              {res.role === "model" && (
+                <Chakra.Avatar
+                  color="gray.50"
+                  size="sm"
+                  bg="gray.600"
+                  name="Gemini"
+                />
+              )}
+              <Chakra.Text w="full">{res.content}</Chakra.Text>
+              {res.role === "user" && (
+                <Chakra.Avatar
+                  color="gray.50"
+                  bg="gray.600"
+                  size="sm"
+                  name="Usuário"
+                />
+              )}
+            </Chakra.HStack>
+          ))}
           <Button
+            background="transparent"
+            border="1px"
+            borderColor="gray.600"
+            color="gray.600"
             isLoading={state.isLoading}
-            onClick={onQueryVideo}
-            isDisabled={!state.apiKey}
+            onClick={onCleanChat}
+            size="xs"
+            px="4"
           >
-            Enviar
-          </Button>
-        </Chakra.HStack>
-      )}
-
-      {!!state.response && (
-        <Chakra.VStack w="full" maxW="720px">
-          <Chakra.Text>{state.response}</Chakra.Text>
-          <Button
-            isLoading={state.isLoading}
-            onClick={resetResposne}
-            isDisabled={!state.apiKey}
-          >
-            Ask Another Question
+            Limpar Chat
           </Button>
         </Chakra.VStack>
       )}
+
+      <Chakra.HStack
+        w="full"
+        align="flex-end"
+        spacing="4"
+        maxW="720px"
+        as="form"
+        onSubmit={onQueryVideo}
+      >
+        <InputTextArea
+          value={state.query}
+          onChange={(e) => onChange("query", e.target.value)}
+          w="full"
+          label="Pergunte qualquer coisa sobre o vídeo"
+          isDisabled={!state.apiKey}
+          borderRadius="8"
+          h="34px"
+        />
+        <Button
+          isLoading={state.isLoading}
+          type="submit"
+          isDisabled={!state.apiKey}
+        >
+          Enviar
+        </Button>
+      </Chakra.HStack>
     </Chakra.VStack>
   );
 };
