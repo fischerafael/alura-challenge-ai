@@ -165,10 +165,11 @@ export const PageMain = () => {
           type="password"
           w="200px"
           label="Gemini API Key"
+          borderRadius="full"
         />
       </Chakra.HStack>
 
-      <Chakra.VStack w="720px">
+      <Chakra.VStack maxW="720px" w="full">
         {!!state.videoId && (
           <Chakra.AspectRatio ratio={16 / 9} width="100%">
             <iframe
