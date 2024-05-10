@@ -1,38 +1,58 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Alura Challenge IA - Chat com Vídeo do YouTube
 
-## Getting Started
+Este projeto foi desenvolvido como parte da Imersão Alura IA, em parceria com a Google. Trata-se de um aplicativo web onde o usuário pode interagir com um vídeo do YouTube por meio de um chat.
 
-First, run the development server:
+## Como usar o aplicativo
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+1. **Obtenha uma API Key da Gemini**: Para utilizar o aplicativo, você precisará de uma chave de API da Gemini. Você pode obter uma em [Gemini API](https://www.geminiapi.com/).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Cole o link do vídeo do YouTube**: Depois de obter a sua chave de API, cole-a no campo apropriado do aplicativo.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+3. **Cole o link do vídeo do YouTube**: Em seguida, cole o link de um vídeo do YouTube que tenha transcrições habilitadas no campo apropriado.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+4. **Clique em 'Carregar'**: Após colar o link do vídeo, clique no botão "Carregar". Isso permitirá que o aplicativo identifique o vídeo, extraia sua transcrição, título e descrição.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+5. **Comece a fazer perguntas**: Depois que o vídeo for carregado, você pode começar a fazer perguntas sobre o conteúdo do vídeo no chat.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Tecnologias Utilizadas
 
-## Learn More
+- **Next.js**: Framework de React para renderização do lado do servidor e criação de aplicativos web.
+- **TypeScript**: Superset do JavaScript que adiciona tipagem estática ao código.
+- **Chakra UI**: Biblioteca de componentes React para a criação de interfaces de usuário com design elegante e responsivo.
+- **Langchain**: Ferramenta para extrair transcrições de vídeos.
+- **Gemini API**: Modelo de IA utilizado para permitir a interação por meio do chat.
 
-To learn more about Next.js, take a look at the following resources:
+## Acesso ao Projeto
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Para acessar o aplicativo, visite o seguinte link: [Alura Challenge IA](https://alura-challenge-ai.vercel.app/)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Clonagem do Projeto
 
-## Deploy on Vercel
+- Para clonar o projeto, acesse o repositório no GitHub: [Alura Challenge IA Repository](https://github.com/fischerafael/alura-challenge-ai)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Executando o Projeto Localmente
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+1. Clone o repositório do GitHub:
+
+   ```
+   git clone https://github.com/fischerafael/alura-challenge-ai
+   ```
+
+2. Navegue até o diretório clonado:
+
+   ```
+   cd alura-challenge-ai
+   ```
+
+3. Instale as dependências do projeto:
+
+   ```
+   npm install
+   ```
+
+4. Execute o projeto localmente:
+   ```
+   npm run dev
+   ```
+
+O projeto será executado na porta 3000. Certifique-se de ter o Node.js instalado em sua máquina para executar o aplicativo.
