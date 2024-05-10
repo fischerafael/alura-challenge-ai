@@ -4,13 +4,15 @@ import { InputText } from "../components/InputText";
 import { Button } from "../components/Button";
 import axios from "axios";
 
+const initialState = {
+  videoUrl: "",
+  videoId: "",
+  apiKey: "",
+  isLoading: false,
+};
+
 export const PageMain = () => {
-  const [state, setState] = useState({
-    videoUrl: "",
-    videoId: "",
-    apiKey: "",
-    isLoading: false,
-  });
+  const [state, setState] = useState(initialState);
 
   const onChange = (key: string, value: string) => {
     setState((prev) => ({ ...prev, [key]: value }));
@@ -18,6 +20,10 @@ export const PageMain = () => {
 
   const onLoading = (boolean: boolean) => {
     setState((prev) => ({ ...prev, isLoading: boolean }));
+  };
+
+  const onReset = () => {
+    setState((prev) => ({ ...initialState, apiKey: prev.apiKey }));
   };
 
   const onExtractVideoId = async () => {
@@ -42,8 +48,6 @@ export const PageMain = () => {
       onLoading(false);
     }
   };
-
-  console.log("state", state);
 
   return (
     <Chakra.VStack
@@ -94,9 +98,17 @@ export const PageMain = () => {
             onChange={(e) => onChange("videoUrl", e.target.value)}
             w="full"
             label="Link do vídeo"
+            isDisabled={!state.apiKey}
           />
-          <Button isLoading={state.isLoading} onClick={onExtractVideoId}>
-            Carregar Video
+          <Button
+            isLoading={state.isLoading}
+            onClick={onExtractVideoId}
+            isDisabled={!state.apiKey}
+          >
+            Carregar Vídeo
+          </Button>
+          <Button isLoading={state.isLoading} onClick={onReset}>
+            Limpar Vídeo
           </Button>
         </Chakra.HStack>
       </Chakra.VStack>
