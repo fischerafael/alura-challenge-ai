@@ -2,13 +2,18 @@ import React, { useState } from "react";
 import * as Chakra from "@chakra-ui/react";
 import { InputText } from "../components/InputText";
 import { Button } from "../components/Button";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
+import { InputTextArea } from "../components/InputTextArea";
 
 const initialState = {
   videoUrl: "",
   videoId: "",
   apiKey: "",
   isLoading: false,
+  videoTranscript: "",
+  videoTitle: "",
+  videoDescription: "",
+  isOpenVideoDetails: false,
 };
 
 export const PageMain = () => {
@@ -22,6 +27,13 @@ export const PageMain = () => {
     setState((prev) => ({ ...prev, isLoading: boolean }));
   };
 
+  const onToggleVideoDetails = () => {
+    setState((prev) => ({
+      ...prev,
+      isOpenVideoDetails: !prev.isOpenVideoDetails,
+    }));
+  };
+
   const onReset = () => {
     setState((prev) => ({ ...initialState, apiKey: prev.apiKey }));
   };
@@ -29,7 +41,7 @@ export const PageMain = () => {
   const onExtractVideoId = async () => {
     try {
       onLoading(true);
-      const { data } = await api.post(
+      const { data: dataVideoId } = await api.post(
         `/extract-id-from-youtube-video`,
         {
           url: state.videoUrl,
@@ -40,10 +52,22 @@ export const PageMain = () => {
           },
         }
       );
-      const videoId = data.data.video_id;
+      const videoId = dataVideoId.data.video_id;
+
+      const { data: dataTranscript } = await api.post(`/extract-transcript`, {
+        id: videoId,
+      });
+
+      console.log("[data]", dataTranscript);
+
       onChange("videoId", videoId);
+      onChange("videoTranscript", dataTranscript.data.transcript);
+      onChange("videoTitle", dataTranscript.data.title);
+      onChange("videoDescription", dataTranscript.data.description);
     } catch (e: any) {
-      alert("Something went wrong");
+      const error = e?.response?.data?.error || e.message;
+
+      alert(`Ooops! ${error}`);
     } finally {
       onLoading(false);
     }
@@ -57,7 +81,7 @@ export const PageMain = () => {
       align="center"
       color="gray.50"
       spacing="8"
-      px="8"
+      p="8"
     >
       <Chakra.HStack
         w="full"
@@ -92,13 +116,15 @@ export const PageMain = () => {
             ></iframe>
           </Chakra.AspectRatio>
         )}
-        <Chakra.HStack w="full" align="flex-end" spacing="8">
+        <Chakra.HStack w="full" align="flex-end" spacing="4">
           <InputText
             value={state.videoUrl}
             onChange={(e) => onChange("videoUrl", e.target.value)}
             w="full"
             label="Link do vídeo"
             isDisabled={!state.apiKey}
+            borderRadius="full"
+            h="34px"
           />
           <Button
             isLoading={state.isLoading}
@@ -107,10 +133,56 @@ export const PageMain = () => {
           >
             Carregar Vídeo
           </Button>
-          <Button isLoading={state.isLoading} onClick={onReset}>
+        </Chakra.HStack>
+        <Chakra.HStack w="full" justify="center">
+          <Button
+            background="transparent"
+            border="1px"
+            borderColor="gray.600"
+            color="gray.600"
+            isLoading={state.isLoading}
+            onClick={onToggleVideoDetails}
+            size="xs"
+            px="4"
+          >
+            {state.isOpenVideoDetails ? "Ocultar Detalhes" : "Ver Detalhes"}
+          </Button>
+          <Button
+            background="transparent"
+            border="1px"
+            borderColor="gray.600"
+            color="gray.600"
+            isLoading={state.isLoading}
+            onClick={onReset}
+            size="xs"
+            px="4"
+          >
             Limpar Vídeo
           </Button>
         </Chakra.HStack>
+
+        {state.isOpenVideoDetails && (
+          <Chakra.VStack w="full" align="flex-end" spacing="0">
+            <InputText
+              value={state.videoTitle}
+              w="full"
+              label="Título do Vìdeo"
+              isDisabled
+            />
+            <InputText
+              value={state.videoDescription}
+              w="full"
+              label="Descrição do Vìdeo"
+              isDisabled
+            />
+            <InputTextArea
+              value={state.videoTranscript}
+              w="full"
+              label="Transcrição do Vìdeo"
+              isDisabled
+            />
+          </Chakra.VStack>
+        )}
       </Chakra.VStack>
     </Chakra.VStack>
   );

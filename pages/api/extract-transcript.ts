@@ -6,10 +6,13 @@ export default async function handler(
   res: NextApiResponse
 ) {
   try {
-    const loader = YoutubeLoader.createFromUrl(req.body.url, {
-      language: "pt",
-      addVideoInfo: true,
-    });
+    const loader = YoutubeLoader.createFromUrl(
+      `https://youtu.be/${req.body.id}`,
+      {
+        language: "pt",
+        addVideoInfo: true,
+      }
+    );
 
     const response = await loader.load();
     const data = response[0];
