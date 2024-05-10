@@ -79,7 +79,7 @@ async function queryVideo(apiKey: string, query: string, context: string) {
       //   },
     ],
     generationConfig: {
-      maxOutputTokens: 100,
+      maxOutputTokens: 10000,
     },
   });
 
