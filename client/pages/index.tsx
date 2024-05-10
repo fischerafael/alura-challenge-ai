@@ -14,6 +14,8 @@ const initialState = {
   videoTitle: "",
   videoDescription: "",
   isOpenVideoDetails: false,
+  query: "",
+  response: "",
 };
 
 export const PageMain = () => {
@@ -73,6 +75,39 @@ export const PageMain = () => {
     }
   };
 
+  const onQueryVideo = async () => {
+    try {
+      onLoading(true);
+      const { data: dataQueryResponse } = await api.post(
+        `/chat`,
+        {
+          query: state.query,
+          title: state.videoTitle,
+          description: state.videoDescription,
+          transcript: state.videoTranscript,
+        },
+        {
+          headers: {
+            api_key: state.apiKey,
+          },
+        }
+      );
+      const response = dataQueryResponse.data.response;
+      onChange("response", response);
+    } catch (e: any) {
+      const error = e?.response?.data?.error || e.message;
+
+      alert(`Ooops! ${error}`);
+    } finally {
+      onLoading(false);
+    }
+  };
+
+  const resetResposne = () => {
+    onChange("response", "");
+    onChange("query", "");
+  };
+
   return (
     <Chakra.VStack
       bg="gray.900"
@@ -116,6 +151,30 @@ export const PageMain = () => {
             ></iframe>
           </Chakra.AspectRatio>
         )}
+
+        {state.isOpenVideoDetails && (
+          <Chakra.VStack w="full" align="flex-end" spacing="0">
+            <InputText
+              value={state.videoTitle}
+              w="full"
+              label="Título do Vìdeo"
+              //   isDisabled
+            />
+            <InputText
+              value={state.videoDescription}
+              w="full"
+              label="Descrição do Vìdeo"
+              //   isDisabled
+            />
+            <InputTextArea
+              value={state.videoTranscript}
+              w="full"
+              label="Transcrição do Vìdeo"
+              //   isDisabled
+            />
+          </Chakra.VStack>
+        )}
+
         <Chakra.HStack w="full" align="flex-end" spacing="4">
           <InputText
             value={state.videoUrl}
@@ -134,6 +193,7 @@ export const PageMain = () => {
             Carregar Vídeo
           </Button>
         </Chakra.HStack>
+
         <Chakra.HStack w="full" justify="center">
           <Button
             background="transparent"
@@ -160,30 +220,41 @@ export const PageMain = () => {
             Limpar Vídeo
           </Button>
         </Chakra.HStack>
-
-        {state.isOpenVideoDetails && (
-          <Chakra.VStack w="full" align="flex-end" spacing="0">
-            <InputText
-              value={state.videoTitle}
-              w="full"
-              label="Título do Vìdeo"
-              isDisabled
-            />
-            <InputText
-              value={state.videoDescription}
-              w="full"
-              label="Descrição do Vìdeo"
-              isDisabled
-            />
-            <InputTextArea
-              value={state.videoTranscript}
-              w="full"
-              label="Transcrição do Vìdeo"
-              isDisabled
-            />
-          </Chakra.VStack>
-        )}
       </Chakra.VStack>
+
+      {!state.response && (
+        <Chakra.HStack w="full" align="flex-end" spacing="4" maxW="720px">
+          <InputTextArea
+            value={state.query}
+            onChange={(e) => onChange("query", e.target.value)}
+            w="full"
+            label="Pergunte qualquer coisa sobre o vídeo"
+            isDisabled={!state.apiKey}
+            borderRadius="8"
+            h="34px"
+          />
+          <Button
+            isLoading={state.isLoading}
+            onClick={onQueryVideo}
+            isDisabled={!state.apiKey}
+          >
+            Enviar
+          </Button>
+        </Chakra.HStack>
+      )}
+
+      {!!state.response && (
+        <Chakra.VStack w="full" maxW="720px">
+          <Chakra.Text>{state.response}</Chakra.Text>
+          <Button
+            isLoading={state.isLoading}
+            onClick={resetResposne}
+            isDisabled={!state.apiKey}
+          >
+            Ask Another Question
+          </Button>
+        </Chakra.VStack>
+      )}
     </Chakra.VStack>
   );
 };
