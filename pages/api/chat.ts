@@ -59,10 +59,14 @@ async function queryVideo(apiKey: string, query: string, context: string) {
         role: "user",
         parts: [{ text: assistantPrompt }],
       },
-      //   {
-      //     role: "assistant",
-      //     parts: [{ text: assistantPrompt }],
-      //   },
+      {
+        role: "assistant",
+        parts: [
+          {
+            text: `Ok, irei fazer como o requisitado no prompt ${assistantPrompt}`,
+          },
+        ],
+      },
       //   {
       //     role: "user",
       //     parts: [{ text: "Hello, I have 2 dogs in my house." }],
