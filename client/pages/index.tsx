@@ -299,31 +299,40 @@ export const PageMain = () => {
         </Chakra.VStack>
       )}
 
-      <Chakra.HStack
-        w="full"
-        align="flex-end"
-        spacing="4"
-        maxW="720px"
-        as="form"
-        onSubmit={onQueryVideo}
-      >
-        <InputTextArea
-          value={state.query}
-          onChange={(e) => onChange("query", e.target.value)}
+      {!!state.videoTranscript && (
+        <Chakra.HStack
           w="full"
-          label="Pergunte qualquer coisa sobre o vídeo"
-          isDisabled={!state.apiKey}
-          borderRadius="8"
-          h="34px"
-        />
-        <Button
-          isLoading={state.isLoading}
-          type="submit"
-          isDisabled={!state.apiKey}
+          align="flex-end"
+          spacing="4"
+          maxW="720px"
+          as="form"
+          onSubmit={onQueryVideo}
         >
-          Enviar
-        </Button>
-      </Chakra.HStack>
+          <InputTextArea
+            value={state.query}
+            onChange={(e) => onChange("query", e.target.value)}
+            w="full"
+            label="Pergunte qualquer coisa sobre o vídeo"
+            isDisabled={!state.apiKey}
+            borderRadius="8"
+            h="34px"
+          />
+          <Button
+            isLoading={state.isLoading}
+            type="submit"
+            isDisabled={!state.apiKey}
+          >
+            Enviar
+          </Button>
+        </Chakra.HStack>
+      )}
+
+      <Chakra.Text fontSize="xs" color="gray.50">
+        Developed during 'Imersão Alura' by{" "}
+        <a target="_blank" href="https://github.com/fischerafael">
+          @fischerafael
+        </a>
+      </Chakra.Text>
     </Chakra.VStack>
   );
 };
