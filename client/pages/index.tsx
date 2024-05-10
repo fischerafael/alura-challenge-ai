@@ -192,6 +192,7 @@ export const PageMain = () => {
               label="Título do Vìdeo"
               //   isDisabled
             />
+
             <InputText
               value={state.videoDescription}
               w="full"
@@ -256,35 +257,44 @@ export const PageMain = () => {
 
       {state.responses.length !== 0 && (
         <Chakra.VStack w="full" maxW="720px" gap="8">
-          {state.responses.map((res) => (
-            <Chakra.HStack
-              key={res.content}
-              w="full"
-              spacing="8"
-              align="flex-start"
-              p="8"
-              bg="gray.800"
-              borderRadius="16"
-            >
-              {res.role === "model" && (
-                <Chakra.Avatar
-                  color="gray.50"
-                  size="sm"
-                  bg="gray.600"
-                  name="Gemini"
-                />
-              )}
-              <Chakra.Text w="full">{res.content}</Chakra.Text>
-              {res.role === "user" && (
-                <Chakra.Avatar
-                  color="gray.50"
-                  bg="gray.600"
-                  size="sm"
-                  name="Usuário"
-                />
-              )}
-            </Chakra.HStack>
-          ))}
+          {state.responses.map((res) => {
+            const paragraphs = res.content.split("\n");
+            const paragraphsJSX = paragraphs.map((p, index) => (
+              <Chakra.Text w="full" key={index}>
+                {p}
+              </Chakra.Text>
+            ));
+            return (
+              <Chakra.HStack
+                key={res.content}
+                w="full"
+                spacing="8"
+                align="flex-start"
+                p="8"
+                bg="gray.800"
+                borderRadius="16"
+              >
+                {res.role === "model" && (
+                  <Chakra.Avatar
+                    color="gray.50"
+                    size="sm"
+                    bg="gray.600"
+                    name="Gemini"
+                  />
+                )}
+                <Chakra.VStack w="full">{paragraphsJSX}</Chakra.VStack>
+
+                {res.role === "user" && (
+                  <Chakra.Avatar
+                    color="gray.50"
+                    bg="gray.600"
+                    size="sm"
+                    name="Usuário"
+                  />
+                )}
+              </Chakra.HStack>
+            );
+          })}
           <Button
             background="transparent"
             border="1px"
