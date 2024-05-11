@@ -140,14 +140,16 @@ export const PageMain = () => {
   };
 
   const onChatLong = async () => {
-    // separar transcript
-    //
+    const chunksDescription = utils.splitChunks(state.videoTranscript);
+    console.log("[chunksDescription]", chunksDescription);
   };
 
   const onChat = async (e: any) => {
     e.preventDefault();
     try {
       onLoading(true);
+      await onChatLong();
+      return;
       const { response } = await onChatShort();
       onAddResponse(state.query, "user");
       onAddResponse(response, "model");
@@ -408,7 +410,8 @@ export const PageMain = () => {
             <Button
               isLoading={state.isLoading}
               type="submit"
-              isDisabled={isDisabledChat}
+              // isDisabled={isDisabledChat}
+              isDisabled={false}
             >
               Enviar
             </Button>
@@ -503,5 +506,26 @@ const services = {
       }
     );
     return { languageCode: data.data.language };
+  },
+};
+
+export const utils = {
+  splitChunks: (text: string, maxLen: number = 20000): string[] => {
+    const chunks: string[] = [];
+    let posicaoInicial = 0;
+
+    while (posicaoInicial < text.length) {
+      let tamanhoChunk = Math.min(maxLen, text.length - posicaoInicial);
+      let chunk = "";
+
+      for (let i = 0; i < tamanhoChunk; i++) {
+        chunk += text[posicaoInicial + i];
+      }
+
+      chunks.push(chunk);
+      posicaoInicial += tamanhoChunk;
+    }
+
+    return chunks;
   },
 };

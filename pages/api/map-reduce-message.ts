@@ -5,7 +5,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   try {
-    const { summarization } = await reduceMessage(
+    const { summarization } = await reduceTranscript(
       req.body.id,
       req.body.language
     );
@@ -18,7 +18,7 @@ export default async function handler(
   }
 }
 
-const reduceMessage = async (id: string, message: string) => {
+const reduceTranscript = async (id: string, message: string) => {
   const summarization = "";
 
   return { summarization };
