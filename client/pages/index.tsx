@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "../components/Button";
 import { InputText } from "../components/InputText";
 import { InputTextArea } from "../components/InputTextArea";
+import { join } from "path";
 
 interface IState {
   videoUrl: string;
@@ -17,7 +18,6 @@ interface IState {
   videoDescription: string;
   isOpenVideoDetails: boolean;
   query: string;
-
   responses: { content: string; role: "user" | "model" }[];
 }
 
@@ -74,6 +74,10 @@ export const PageMain = () => {
         },
       ],
     }));
+  };
+
+  const onSetDefaultMessage = (message: string) => {
+    onChange("query", message);
   };
 
   const onExtractVideoId = async () => {
@@ -141,6 +145,8 @@ export const PageMain = () => {
     }
   };
 
+  const isSugVisible = state.responses.length === 0;
+
   return (
     <Chakra.VStack
       bg="gray.900"
@@ -161,7 +167,7 @@ export const PageMain = () => {
       >
         <Chakra.Text
           fontWeight="bold"
-          bgGradient="linear(to-l, red.500, blue.500)"
+          bgGradient="linear(to-l, red.400, blue.400)"
           bgClip="text"
         >
           TalkToYouTube
@@ -299,6 +305,7 @@ export const PageMain = () => {
               </Chakra.HStack>
             );
           })}
+
           <Button
             background="transparent"
             border="1px"
@@ -308,6 +315,7 @@ export const PageMain = () => {
             onClick={onCleanChat}
             size="xs"
             px="4"
+            alignSelf="flex-end"
           >
             Limpar Chat
           </Button>
@@ -315,32 +323,65 @@ export const PageMain = () => {
       )}
 
       {!!state.videoTranscript && (
-        <Chakra.HStack
-          w="full"
-          align="flex-end"
-          spacing="8"
-          maxW="720px"
-          as="form"
-          onSubmit={onQueryVideo}
-        >
-          <InputTextArea
-            value={state.query}
-            onChange={(e) => onChange("query", e.target.value)}
+        <Chakra.VStack w="full" maxW="720px" spacing="8">
+          {isSugVisible && (
+            <Chakra.VStack spacing="2" align="flex-start" w="full" maxW="560px">
+              <Chakra.Text fontSize="xs" color="gray.500">
+                Sugestões de perguntas
+              </Chakra.Text>
+              <Chakra.Grid
+                gridTemplateColumns={["1fr", "1fr 1fr", "1fr 1fr 1fr"]}
+                gap="4"
+              >
+                {[
+                  "Quais são os assuntos principais do vídeo?",
+                  " Resuma o conteúdo do vídeo",
+                  "Qual é o tema central do vídeo?",
+                ].map((sug) => (
+                  <Chakra.HStack
+                    p="4"
+                    border="1px"
+                    borderColor="gray.600"
+                    borderRadius="16"
+                    key={sug}
+                    _hover={{ bgGradient: "linear(to-r, gray.700, gray.800)" }}
+                    cursor="pointer"
+                    onClick={() => onSetDefaultMessage(sug)}
+                  >
+                    <Chakra.Text color="gray.500" textAlign="center">
+                      {sug}
+                    </Chakra.Text>
+                  </Chakra.HStack>
+                ))}
+              </Chakra.Grid>
+            </Chakra.VStack>
+          )}
+          <Chakra.HStack
+            align="flex-end"
+            spacing="8"
+            as="form"
             w="full"
-            label="Pergunte qualquer coisa sobre o vídeo"
-            isDisabled={!state.apiKey}
-            borderRadius="16"
-            h="34px"
-          />
-
-          <Button
-            isLoading={state.isLoading}
-            type="submit"
-            isDisabled={!state.apiKey}
+            onSubmit={onQueryVideo}
           >
-            Enviar
-          </Button>
-        </Chakra.HStack>
+            <InputTextArea
+              value={state.query}
+              onChange={(e) => onChange("query", e.target.value)}
+              w="full"
+              label="Pergunte qualquer coisa sobre o vídeo"
+              isDisabled={!state.apiKey}
+              borderRadius="16"
+              h="34px"
+            />
+
+            <Button
+              isLoading={state.isLoading}
+              type="submit"
+              isDisabled={!state.apiKey}
+            >
+              Enviar
+            </Button>
+          </Chakra.HStack>
+        </Chakra.VStack>
       )}
 
       <Chakra.Text fontSize="xs" color="gray.600">
