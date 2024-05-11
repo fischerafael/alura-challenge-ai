@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+export type IGeminiModels = "gemini-1.0-pro" | "gemini-1.5-pro-latest";
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
