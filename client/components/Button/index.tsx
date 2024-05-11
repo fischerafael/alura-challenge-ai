@@ -8,11 +8,16 @@ interface ButtonProps extends C.ButtonProps {
 export const Button = ({ children, ...props }: ButtonProps) => {
   return (
     <C.Button
-      colorScheme="gray"
+      bg="transparent"
+      border="1px"
+      borderColor="gray.600"
+      _hover={{ bgGradient: "linear(to-r, gray.700, gray.800)" }}
+      color="gray.400"
       borderRadius="full"
-      fontSize="sm"
+      fontSize="xs"
       size={"sm"}
       px="8"
+      letterSpacing="1px"
       fontWeight="semi-bold"
       {...props}
     >

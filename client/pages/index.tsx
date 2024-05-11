@@ -1,8 +1,9 @@
-import React, { useRef, useState } from "react";
 import * as Chakra from "@chakra-ui/react";
-import { InputText } from "../components/InputText";
+import * as Icon from "react-icons/hi";
+import axios from "axios";
+import { useState } from "react";
 import { Button } from "../components/Button";
-import axios, { AxiosError } from "axios";
+import { InputText } from "../components/InputText";
 import { InputTextArea } from "../components/InputTextArea";
 
 interface IState {
@@ -149,15 +150,14 @@ export const PageMain = () => {
       color="gray.50"
       spacing="8"
       p="8"
+      pt="0"
     >
       <Chakra.HStack
         w="full"
         maxW="720px"
-        h="10vh"
+        h="15vh"
         align="center"
         justify="space-between"
-        borderBottom="1px"
-        borderBottomColor="gray.600"
       >
         <Chakra.Text>TalkToYouTube</Chakra.Text>
         <InputText
@@ -185,27 +185,6 @@ export const PageMain = () => {
           </Chakra.AspectRatio>
         )}
 
-        {state.isOpenVideoDetails && (
-          <Chakra.VStack w="full" align="flex-end" spacing="0">
-            <InputText
-              value={state.videoTitle}
-              w="full"
-              label="Título do Vìdeo"
-            />
-
-            <InputText
-              value={state.videoDescription}
-              w="full"
-              label="Descrição do Vìdeo"
-            />
-            <InputTextArea
-              value={state.videoTranscript}
-              w="full"
-              label="Transcrição do Vìdeo"
-            />
-          </Chakra.VStack>
-        )}
-
         <Chakra.HStack w="full" align="flex-end" spacing="4">
           <InputText
             value={state.videoUrl}
@@ -216,42 +195,62 @@ export const PageMain = () => {
             borderRadius="full"
             h="34px"
           />
-
+          <Chakra.VStack h="24px">
+            {!!state.isOpenVideoDetails && (
+              <Chakra.Icon
+                as={Icon.HiOutlineEye}
+                onClick={onToggleVideoDetails}
+                color="gray.600"
+                cursor="pointer"
+              />
+            )}
+            {!state.isOpenVideoDetails && (
+              <Chakra.Icon
+                as={Icon.HiOutlineEyeOff}
+                onClick={onToggleVideoDetails}
+                color="gray.600"
+                cursor="pointer"
+              />
+            )}
+          </Chakra.VStack>
+          <Chakra.VStack h="24px">
+            <Chakra.Icon
+              as={Icon.HiOutlineRefresh}
+              onClick={onReset}
+              color="gray.600"
+              cursor="pointer"
+            />
+          </Chakra.VStack>
           <Button
             isLoading={state.isLoading}
             onClick={onExtractVideoId}
             isDisabled={!state.apiKey}
           >
-            Carregar Vídeo
+            Carregar
           </Button>
         </Chakra.HStack>
-
-        <Chakra.HStack w="full" justify="center">
-          <Button
-            background="transparent"
-            border="1px"
-            borderColor="gray.600"
-            color="gray.600"
-            isLoading={state.isLoading}
-            onClick={onToggleVideoDetails}
-            size="xs"
-            px="4"
-          >
-            {state.isOpenVideoDetails ? "Ocultar Detalhes" : "Ver Detalhes"}
-          </Button>
-          <Button
-            background="transparent"
-            border="1px"
-            borderColor="gray.600"
-            color="gray.600"
-            isLoading={state.isLoading}
-            onClick={onReset}
-            size="xs"
-            px="4"
-          >
-            Limpar Vídeo
-          </Button>
-        </Chakra.HStack>
+        {state.isOpenVideoDetails && (
+          <Chakra.VStack w="full" align="flex-end" spacing="4" py="8">
+            <InputText
+              value={state.videoTitle}
+              w="full"
+              label="Título do Vìdeo"
+              borderRadius="full"
+            />
+            <InputText
+              value={state.videoDescription}
+              w="full"
+              label="Descrição do Vìdeo"
+              borderRadius="full"
+            />
+            <InputTextArea
+              value={state.videoTranscript}
+              w="full"
+              label="Transcrição do Vìdeo"
+              borderRadius="16"
+            />
+          </Chakra.VStack>
+        )}
       </Chakra.VStack>
 
       {state.responses.length !== 0 && (
@@ -313,7 +312,7 @@ export const PageMain = () => {
         <Chakra.HStack
           w="full"
           align="flex-end"
-          spacing="4"
+          spacing="8"
           maxW="720px"
           as="form"
           onSubmit={onQueryVideo}
@@ -324,9 +323,10 @@ export const PageMain = () => {
             w="full"
             label="Pergunte qualquer coisa sobre o vídeo"
             isDisabled={!state.apiKey}
-            borderRadius="8"
+            borderRadius="16"
             h="34px"
           />
+
           <Button
             isLoading={state.isLoading}
             type="submit"
@@ -337,7 +337,7 @@ export const PageMain = () => {
         </Chakra.HStack>
       )}
 
-      <Chakra.Text fontSize="xs" color="gray.50">
+      <Chakra.Text fontSize="xs" color="gray.600">
         Developed during 'Imersão Alura' by{" "}
         <a target="_blank" href="https://github.com/fischerafael">
           @fischerafael
