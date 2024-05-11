@@ -113,7 +113,7 @@ export const PageMain = () => {
     }
   };
 
-  const onQueryVideo = async (e: any) => {
+  const onChat = async (e: any) => {
     e.preventDefault();
     try {
       onLoading(true);
@@ -361,7 +361,7 @@ export const PageMain = () => {
             spacing="8"
             as="form"
             w="full"
-            onSubmit={onQueryVideo}
+            onSubmit={onChat}
           >
             <InputTextArea
               value={state.query}
@@ -392,6 +392,10 @@ export const PageMain = () => {
       </Chakra.Text>
     </Chakra.VStack>
   );
+};
+
+const countChars = (message: string) => {
+  return message.length;
 };
 
 const api = axios.create({
