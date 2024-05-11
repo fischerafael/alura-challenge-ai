@@ -159,7 +159,13 @@ export const PageMain = () => {
         align="center"
         justify="space-between"
       >
-        <Chakra.Text>TalkToYouTube</Chakra.Text>
+        <Chakra.Text
+          fontWeight="bold"
+          bgGradient="linear(to-l, red.500, blue.500)"
+          bgClip="text"
+        >
+          TalkToYouTube
+        </Chakra.Text>
         <InputText
           value={state.apiKey}
           onChange={(e) => onChange("apiKey", e.target.value)}

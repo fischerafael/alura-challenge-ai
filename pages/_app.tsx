@@ -7,7 +7,7 @@ export default function App({ Component, pageProps }: AppProps) {
     <ChakraProvider>
       <Head>
         <title>ChatYoutube</title>
-        <link href="/youtube-favicon.svg" type="image/x-icon"></link>
+        <link href="/youtube-favicon.svg"></link>
       </Head>
       <Component {...pageProps} />
     </ChakraProvider>
