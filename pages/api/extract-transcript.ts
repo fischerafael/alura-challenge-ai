@@ -19,7 +19,7 @@ export default async function handler(
   }
 }
 
-const extractTranscript = async (id: string, language: string = "pt") => {
+const extractTranscript = async (id: string, language: string) => {
   const loader = YoutubeLoader.createFromUrl(`https://youtu.be/${id}`, {
     language,
     addVideoInfo: true,

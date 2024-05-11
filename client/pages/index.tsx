@@ -10,6 +10,7 @@ interface IState {
   videoId: string;
   apiKey: string;
   isLoading: boolean;
+  videoLanguage: string;
   videoTranscript: string;
   videoTitle: string;
   videoDescription: string;
@@ -24,6 +25,7 @@ const initialState: IState = {
   videoId: "",
   apiKey: "",
   isLoading: false,
+  videoLanguage: "",
   videoTranscript: "",
   videoTitle: "",
   videoDescription: "",
@@ -32,24 +34,9 @@ const initialState: IState = {
   responses: [],
 };
 
-const services = {
-  extractIdFromYoutubeVideo: async (url: string, apiKey: string) => {
-    const { data: dataVideoId } = await api.post(
-      `/extract-id-from-youtube-video`,
-      {
-        url,
-      },
-      {
-        headers: {
-          api_key: apiKey,
-        },
-      }
-    );
-    return { videoId: dataVideoId.data.video_id };
-  },
-};
-
 export const PageMain = () => {
+  const toast = Chakra.useToast();
+
   const [state, setState] = useState(initialState);
 
   const onChange = (key: string, value: string) => {
@@ -96,21 +83,26 @@ export const PageMain = () => {
         state.apiKey
       );
 
-      const { data: dataTranscript } = await api.post(`/extract-transcript`, {
-        id: videoId,
-        language: "pt",
-      });
-
-      console.log("[data]", dataTranscript);
+      const { description, title, transcript } =
+        await services.extractTranscript(videoId, state.videoLanguage);
 
       onChange("videoId", videoId);
-      onChange("videoTranscript", dataTranscript.data.transcript);
-      onChange("videoTitle", dataTranscript.data.title);
-      onChange("videoDescription", dataTranscript.data.description);
+      onChange("videoTranscript", transcript);
+      onChange("videoTitle", title);
+      onChange("videoDescription", description);
+      toast({
+        title: "Successo!",
+        description:
+          "Transcrição do video carregada com sucesso. Você já pode começar a conversar com ele!",
+        colorScheme: "green",
+      });
     } catch (e: any) {
       const error = e?.response?.data?.error || e.message;
-
-      alert(`Ooops! ${error}`);
+      toast({
+        title: "Ooops",
+        description: error,
+        colorScheme: "red",
+      });
     } finally {
       onLoading(false);
     }
@@ -120,28 +112,29 @@ export const PageMain = () => {
     e.preventDefault();
     try {
       onLoading(true);
-      const { data: dataQueryResponse } = await api.post(
-        `/chat`,
-        {
-          query: state.query,
-          title: state.videoTitle,
-          description: state.videoDescription,
-          transcript: state.videoTranscript,
-        },
-        {
-          headers: {
-            api_key: state.apiKey,
-          },
-        }
+      const { response } = await services.chat(
+        state.apiKey,
+        state.query,
+        state.videoTitle,
+        state.videoDescription,
+        state.videoTranscript
       );
-      const response = dataQueryResponse.data.response;
       onAddResponse(state.query, "user");
       onAddResponse(response, "model");
       onChange("query", "");
+      toast({
+        title: "Successo!",
+        description: "Mensagem respondida com successo!",
+        colorScheme: "green",
+        duration: 1000,
+      });
     } catch (e: any) {
       const error = e?.response?.data?.error || e.message;
-
-      alert(`Ooops! ${error}`);
+      toast({
+        title: "Ooops",
+        description: error,
+        colorScheme: "red",
+      });
     } finally {
       onLoading(false);
     }
@@ -198,20 +191,17 @@ export const PageMain = () => {
               value={state.videoTitle}
               w="full"
               label="Título do Vìdeo"
-              //   isDisabled
             />
 
             <InputText
               value={state.videoDescription}
               w="full"
               label="Descrição do Vìdeo"
-              //   isDisabled
             />
             <InputTextArea
               value={state.videoTranscript}
               w="full"
               label="Transcrição do Vìdeo"
-              //   isDisabled
             />
           </Chakra.VStack>
         )}
@@ -226,6 +216,7 @@ export const PageMain = () => {
             borderRadius="full"
             h="34px"
           />
+
           <Button
             isLoading={state.isLoading}
             onClick={onExtractVideoId}
@@ -359,3 +350,71 @@ export const PageMain = () => {
 const api = axios.create({
   baseURL: "/api",
 });
+
+const services = {
+  extractIdFromYoutubeVideo: async (url: string, apiKey: string) => {
+    const { data: dataVideoId } = await api.post(
+      `/extract-id-from-youtube-video`,
+      {
+        url,
+      },
+      {
+        headers: {
+          api_key: apiKey,
+        },
+      }
+    );
+    return { videoId: dataVideoId.data.video_id };
+  },
+  extractTranscript: async (videoId: string, languageCode: string) => {
+    const { data: dataTranscript } = await api.post(`/extract-transcript`, {
+      id: videoId,
+      language: languageCode,
+    });
+
+    const data = dataTranscript.data;
+
+    return {
+      transcript: data.transcript,
+      title: data.title,
+      description: data.description,
+    };
+  },
+  chat: async (
+    apiKey: string,
+    query: string,
+    title: string,
+    description: string,
+    transcript: string
+  ) => {
+    const { data: dataQueryResponse } = await api.post(
+      `/chat`,
+      {
+        query: query,
+        title: title,
+        description: description,
+        transcript: transcript,
+      },
+      {
+        headers: {
+          api_key: apiKey,
+        },
+      }
+    );
+    return { response: dataQueryResponse.data.response };
+  },
+  detectLanguage: async (apiKey: string, transcript: string) => {
+    const { data } = await api.post(
+      `/detect-language`,
+      {
+        transcript: transcript,
+      },
+      {
+        headers: {
+          api_key: apiKey,
+        },
+      }
+    );
+    return { languageCode: data.data.language };
+  },
+};
