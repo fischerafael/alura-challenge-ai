@@ -1,21 +1,23 @@
-import React, { useRef, useState } from "react";
 import * as Chakra from "@chakra-ui/react";
-import { InputText } from "../components/InputText";
+import * as Icon from "react-icons/hi";
+import axios from "axios";
+import { useState } from "react";
 import { Button } from "../components/Button";
-import axios, { AxiosError } from "axios";
+import { InputText } from "../components/InputText";
 import { InputTextArea } from "../components/InputTextArea";
+import { join } from "path";
 
 interface IState {
   videoUrl: string;
   videoId: string;
   apiKey: string;
   isLoading: boolean;
+  videoLanguage: string;
   videoTranscript: string;
   videoTitle: string;
   videoDescription: string;
   isOpenVideoDetails: boolean;
   query: string;
-
   responses: { content: string; role: "user" | "model" }[];
 }
 
@@ -24,6 +26,7 @@ const initialState: IState = {
   videoId: "",
   apiKey: "",
   isLoading: false,
+  videoLanguage: "",
   videoTranscript: "",
   videoTitle: "",
   videoDescription: "",
@@ -33,9 +36,9 @@ const initialState: IState = {
 };
 
 export const PageMain = () => {
-  const [state, setState] = useState(initialState);
+  const toast = Chakra.useToast();
 
-  const ref = useRef<any>();
+  const [state, setState] = useState(initialState);
 
   const onChange = (key: string, value: string) => {
     setState((prev) => ({ ...prev, [key]: value }));
@@ -73,36 +76,38 @@ export const PageMain = () => {
     }));
   };
 
+  const onSetDefaultMessage = (message: string) => {
+    onChange("query", message);
+  };
+
   const onExtractVideoId = async () => {
     try {
       onLoading(true);
-      const { data: dataVideoId } = await api.post(
-        `/extract-id-from-youtube-video`,
-        {
-          url: state.videoUrl,
-        },
-        {
-          headers: {
-            api_key: state.apiKey,
-          },
-        }
+      const { videoId } = await services.extractIdFromYoutubeVideo(
+        state.videoUrl,
+        state.apiKey
       );
-      const videoId = dataVideoId.data.video_id;
 
-      const { data: dataTranscript } = await api.post(`/extract-transcript`, {
-        id: videoId,
-      });
-
-      console.log("[data]", dataTranscript);
+      const { description, title, transcript } =
+        await services.extractTranscript(videoId, state.videoLanguage);
 
       onChange("videoId", videoId);
-      onChange("videoTranscript", dataTranscript.data.transcript);
-      onChange("videoTitle", dataTranscript.data.title);
-      onChange("videoDescription", dataTranscript.data.description);
+      onChange("videoTranscript", transcript);
+      onChange("videoTitle", title);
+      onChange("videoDescription", description);
+      toast({
+        title: "Successo!",
+        description:
+          "Transcrição do video carregada com sucesso. Você já pode começar a conversar com ele!",
+        colorScheme: "green",
+      });
     } catch (e: any) {
       const error = e?.response?.data?.error || e.message;
-
-      alert(`Ooops! ${error}`);
+      toast({
+        title: "Ooops",
+        description: error,
+        colorScheme: "red",
+      });
     } finally {
       onLoading(false);
     }
@@ -112,32 +117,35 @@ export const PageMain = () => {
     e.preventDefault();
     try {
       onLoading(true);
-      const { data: dataQueryResponse } = await api.post(
-        `/chat`,
-        {
-          query: state.query,
-          title: state.videoTitle,
-          description: state.videoDescription,
-          transcript: state.videoTranscript,
-        },
-        {
-          headers: {
-            api_key: state.apiKey,
-          },
-        }
+      const { response } = await services.chat(
+        state.apiKey,
+        state.query,
+        state.videoTitle,
+        state.videoDescription,
+        state.videoTranscript
       );
-      const response = dataQueryResponse.data.response;
       onAddResponse(state.query, "user");
       onAddResponse(response, "model");
       onChange("query", "");
+      toast({
+        title: "Successo!",
+        description: "Mensagem respondida com successo!",
+        colorScheme: "green",
+        duration: 1000,
+      });
     } catch (e: any) {
       const error = e?.response?.data?.error || e.message;
-
-      alert(`Ooops! ${error}`);
+      toast({
+        title: "Ooops",
+        description: error,
+        colorScheme: "red",
+      });
     } finally {
       onLoading(false);
     }
   };
+
+  const isSugVisible = state.responses.length === 0;
 
   return (
     <Chakra.VStack
@@ -148,17 +156,22 @@ export const PageMain = () => {
       color="gray.50"
       spacing="8"
       p="8"
+      pt="0"
     >
       <Chakra.HStack
         w="full"
         maxW="720px"
-        h="10vh"
+        h="15vh"
         align="center"
         justify="space-between"
-        borderBottom="1px"
-        borderBottomColor="gray.600"
       >
-        <Chakra.Text>TalkToYouTube</Chakra.Text>
+        <Chakra.Text
+          fontWeight="bold"
+          bgGradient="linear(to-l, red.400, blue.400)"
+          bgClip="text"
+        >
+          TalkToYouTube
+        </Chakra.Text>
         <InputText
           value={state.apiKey}
           onChange={(e) => onChange("apiKey", e.target.value)}
@@ -184,30 +197,6 @@ export const PageMain = () => {
           </Chakra.AspectRatio>
         )}
 
-        {state.isOpenVideoDetails && (
-          <Chakra.VStack w="full" align="flex-end" spacing="0">
-            <InputText
-              value={state.videoTitle}
-              w="full"
-              label="Título do Vìdeo"
-              //   isDisabled
-            />
-
-            <InputText
-              value={state.videoDescription}
-              w="full"
-              label="Descrição do Vìdeo"
-              //   isDisabled
-            />
-            <InputTextArea
-              value={state.videoTranscript}
-              w="full"
-              label="Transcrição do Vìdeo"
-              //   isDisabled
-            />
-          </Chakra.VStack>
-        )}
-
         <Chakra.HStack w="full" align="flex-end" spacing="4">
           <InputText
             value={state.videoUrl}
@@ -218,41 +207,62 @@ export const PageMain = () => {
             borderRadius="full"
             h="34px"
           />
+          <Chakra.VStack h="24px">
+            {!!state.isOpenVideoDetails && (
+              <Chakra.Icon
+                as={Icon.HiOutlineEye}
+                onClick={onToggleVideoDetails}
+                color="gray.600"
+                cursor="pointer"
+              />
+            )}
+            {!state.isOpenVideoDetails && (
+              <Chakra.Icon
+                as={Icon.HiOutlineEyeOff}
+                onClick={onToggleVideoDetails}
+                color="gray.600"
+                cursor="pointer"
+              />
+            )}
+          </Chakra.VStack>
+          <Chakra.VStack h="24px">
+            <Chakra.Icon
+              as={Icon.HiOutlineRefresh}
+              onClick={onReset}
+              color="gray.600"
+              cursor="pointer"
+            />
+          </Chakra.VStack>
           <Button
             isLoading={state.isLoading}
             onClick={onExtractVideoId}
             isDisabled={!state.apiKey}
           >
-            Carregar Vídeo
+            Carregar
           </Button>
         </Chakra.HStack>
-
-        <Chakra.HStack w="full" justify="center">
-          <Button
-            background="transparent"
-            border="1px"
-            borderColor="gray.600"
-            color="gray.600"
-            isLoading={state.isLoading}
-            onClick={onToggleVideoDetails}
-            size="xs"
-            px="4"
-          >
-            {state.isOpenVideoDetails ? "Ocultar Detalhes" : "Ver Detalhes"}
-          </Button>
-          <Button
-            background="transparent"
-            border="1px"
-            borderColor="gray.600"
-            color="gray.600"
-            isLoading={state.isLoading}
-            onClick={onReset}
-            size="xs"
-            px="4"
-          >
-            Limpar Vídeo
-          </Button>
-        </Chakra.HStack>
+        {state.isOpenVideoDetails && (
+          <Chakra.VStack w="full" align="flex-end" spacing="4" py="8">
+            <InputText
+              value={state.videoTitle}
+              w="full"
+              label="Título do Vìdeo"
+              borderRadius="full"
+            />
+            <InputText
+              value={state.videoDescription}
+              w="full"
+              label="Descrição do Vìdeo"
+              borderRadius="full"
+            />
+            <InputTextArea
+              value={state.videoTranscript}
+              w="full"
+              label="Transcrição do Vìdeo"
+              borderRadius="16"
+            />
+          </Chakra.VStack>
+        )}
       </Chakra.VStack>
 
       {state.responses.length !== 0 && (
@@ -295,6 +305,7 @@ export const PageMain = () => {
               </Chakra.HStack>
             );
           })}
+
           <Button
             background="transparent"
             border="1px"
@@ -304,6 +315,7 @@ export const PageMain = () => {
             onClick={onCleanChat}
             size="xs"
             px="4"
+            alignSelf="flex-end"
           >
             Limpar Chat
           </Button>
@@ -311,34 +323,68 @@ export const PageMain = () => {
       )}
 
       {!!state.videoTranscript && (
-        <Chakra.HStack
-          w="full"
-          align="flex-end"
-          spacing="4"
-          maxW="720px"
-          as="form"
-          onSubmit={onQueryVideo}
-        >
-          <InputTextArea
-            value={state.query}
-            onChange={(e) => onChange("query", e.target.value)}
+        <Chakra.VStack w="full" maxW="720px" spacing="8">
+          {isSugVisible && (
+            <Chakra.VStack spacing="2" align="flex-start" w="full" maxW="560px">
+              <Chakra.Text fontSize="xs" color="gray.500">
+                Sugestões de perguntas
+              </Chakra.Text>
+              <Chakra.Grid
+                gridTemplateColumns={["1fr", "1fr 1fr", "1fr 1fr 1fr"]}
+                gap="4"
+              >
+                {[
+                  "Quais são os assuntos principais do vídeo?",
+                  " Resuma o conteúdo do vídeo",
+                  "Qual é o tema central do vídeo?",
+                ].map((sug) => (
+                  <Chakra.HStack
+                    p="4"
+                    border="1px"
+                    borderColor="gray.600"
+                    borderRadius="16"
+                    key={sug}
+                    _hover={{ bgGradient: "linear(to-r, gray.700, gray.800)" }}
+                    cursor="pointer"
+                    onClick={() => onSetDefaultMessage(sug)}
+                  >
+                    <Chakra.Text color="gray.500" textAlign="center">
+                      {sug}
+                    </Chakra.Text>
+                  </Chakra.HStack>
+                ))}
+              </Chakra.Grid>
+            </Chakra.VStack>
+          )}
+          <Chakra.HStack
+            align="flex-end"
+            spacing="8"
+            as="form"
             w="full"
-            label="Pergunte qualquer coisa sobre o vídeo"
-            isDisabled={!state.apiKey}
-            borderRadius="8"
-            h="34px"
-          />
-          <Button
-            isLoading={state.isLoading}
-            type="submit"
-            isDisabled={!state.apiKey}
+            onSubmit={onQueryVideo}
           >
-            Enviar
-          </Button>
-        </Chakra.HStack>
+            <InputTextArea
+              value={state.query}
+              onChange={(e) => onChange("query", e.target.value)}
+              w="full"
+              label="Pergunte qualquer coisa sobre o vídeo"
+              isDisabled={!state.apiKey}
+              borderRadius="16"
+              h="34px"
+            />
+
+            <Button
+              isLoading={state.isLoading}
+              type="submit"
+              isDisabled={!state.apiKey}
+            >
+              Enviar
+            </Button>
+          </Chakra.HStack>
+        </Chakra.VStack>
       )}
 
-      <Chakra.Text fontSize="xs" color="gray.50">
+      <Chakra.Text fontSize="xs" color="gray.600">
         Developed during 'Imersão Alura' by{" "}
         <a target="_blank" href="https://github.com/fischerafael">
           @fischerafael
@@ -351,3 +397,71 @@ export const PageMain = () => {
 const api = axios.create({
   baseURL: "/api",
 });
+
+const services = {
+  extractIdFromYoutubeVideo: async (url: string, apiKey: string) => {
+    const { data: dataVideoId } = await api.post(
+      `/extract-id-from-youtube-video`,
+      {
+        url,
+      },
+      {
+        headers: {
+          api_key: apiKey,
+        },
+      }
+    );
+    return { videoId: dataVideoId.data.video_id };
+  },
+  extractTranscript: async (videoId: string, languageCode: string) => {
+    const { data: dataTranscript } = await api.post(`/extract-transcript`, {
+      id: videoId,
+      language: languageCode,
+    });
+
+    const data = dataTranscript.data;
+
+    return {
+      transcript: data.transcript,
+      title: data.title,
+      description: data.description,
+    };
+  },
+  chat: async (
+    apiKey: string,
+    query: string,
+    title: string,
+    description: string,
+    transcript: string
+  ) => {
+    const { data: dataQueryResponse } = await api.post(
+      `/chat`,
+      {
+        query: query,
+        title: title,
+        description: description,
+        transcript: transcript,
+      },
+      {
+        headers: {
+          api_key: apiKey,
+        },
+      }
+    );
+    return { response: dataQueryResponse.data.response };
+  },
+  detectLanguage: async (apiKey: string, transcript: string) => {
+    const { data } = await api.post(
+      `/detect-language`,
+      {
+        transcript: transcript,
+      },
+      {
+        headers: {
+          api_key: apiKey,
+        },
+      }
+    );
+    return { languageCode: data.data.language };
+  },
+};
