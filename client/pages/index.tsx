@@ -32,10 +32,25 @@ const initialState: IState = {
   responses: [],
 };
 
+const services = {
+  extractIdFromYoutubeVideo: async (url: string, apiKey: string) => {
+    const { data: dataVideoId } = await api.post(
+      `/extract-id-from-youtube-video`,
+      {
+        url,
+      },
+      {
+        headers: {
+          api_key: apiKey,
+        },
+      }
+    );
+    return { videoId: dataVideoId.data.video_id };
+  },
+};
+
 export const PageMain = () => {
   const [state, setState] = useState(initialState);
-
-  const ref = useRef<any>();
 
   const onChange = (key: string, value: string) => {
     setState((prev) => ({ ...prev, [key]: value }));
@@ -76,21 +91,14 @@ export const PageMain = () => {
   const onExtractVideoId = async () => {
     try {
       onLoading(true);
-      const { data: dataVideoId } = await api.post(
-        `/extract-id-from-youtube-video`,
-        {
-          url: state.videoUrl,
-        },
-        {
-          headers: {
-            api_key: state.apiKey,
-          },
-        }
+      const { videoId } = await services.extractIdFromYoutubeVideo(
+        state.videoUrl,
+        state.apiKey
       );
-      const videoId = dataVideoId.data.video_id;
 
       const { data: dataTranscript } = await api.post(`/extract-transcript`, {
         id: videoId,
+        language: "pt",
       });
 
       console.log("[data]", dataTranscript);

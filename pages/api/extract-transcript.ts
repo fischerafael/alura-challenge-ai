@@ -7,7 +7,8 @@ export default async function handler(
 ) {
   try {
     const { description, title, transcript } = await extractTranscript(
-      req.body.id
+      req.body.id,
+      req.body.language
     );
 
     return res.status(200).json({
