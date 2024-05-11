@@ -100,6 +100,7 @@ export const PageMain = () => {
         description:
           "Transcrição do video carregada com sucesso. Você já pode começar a conversar com ele!",
         colorScheme: "green",
+        position: "top",
       });
     } catch (e: any) {
       const error = e?.response?.data?.error || e.message;
@@ -107,13 +108,27 @@ export const PageMain = () => {
         title: "Ooops",
         description: error,
         colorScheme: "red",
+        position: "top",
       });
     } finally {
       onLoading(false);
     }
   };
 
-  const onQueryVideo = async (e: any) => {
+  const videoChars = countChars(
+    state.videoTranscript,
+    state.videoDescription,
+    state.videoTitle
+  );
+
+  const isBelowMax = videoChars < 24000;
+  const isValidChat = isBelowMax && !!state.query.length && !!state.apiKey;
+  const isDisabledChat = !isValidChat;
+  const maxHelp = isBelowMax
+    ? ""
+    : `${videoChars}/25000 - O limite de tokens é superior ao suportado no momento. Tente com um vídeo mais curto`;
+
+  const onChat = async (e: any) => {
     e.preventDefault();
     try {
       onLoading(true);
@@ -132,6 +147,7 @@ export const PageMain = () => {
         description: "Mensagem respondida com successo!",
         colorScheme: "green",
         duration: 1000,
+        position: "top",
       });
     } catch (e: any) {
       const error = e?.response?.data?.error || e.message;
@@ -139,6 +155,7 @@ export const PageMain = () => {
         title: "Ooops",
         description: error,
         colorScheme: "red",
+        position: "top",
       });
     } finally {
       onLoading(false);
@@ -206,6 +223,7 @@ export const PageMain = () => {
             isDisabled={!state.apiKey}
             borderRadius="full"
             h="34px"
+            helpText={maxHelp}
           />
           <Chakra.VStack h="24px">
             {!!state.isOpenVideoDetails && (
@@ -258,7 +276,11 @@ export const PageMain = () => {
             <InputTextArea
               value={state.videoTranscript}
               w="full"
-              label="Transcrição do Vìdeo"
+              label={`Transcrição do Vìdeo (${countChars(
+                state.videoTranscript,
+                state.videoDescription,
+                state.videoTitle
+              )}/25000)`}
               borderRadius="16"
             />
           </Chakra.VStack>
@@ -361,7 +383,7 @@ export const PageMain = () => {
             spacing="8"
             as="form"
             w="full"
-            onSubmit={onQueryVideo}
+            onSubmit={onChat}
           >
             <InputTextArea
               value={state.query}
@@ -376,7 +398,7 @@ export const PageMain = () => {
             <Button
               isLoading={state.isLoading}
               type="submit"
-              isDisabled={!state.apiKey}
+              isDisabled={isDisabledChat}
             >
               Enviar
             </Button>
@@ -392,6 +414,14 @@ export const PageMain = () => {
       </Chakra.Text>
     </Chakra.VStack>
   );
+};
+
+const countChars = (
+  description: string = "",
+  title: string = "",
+  transcript: string = ""
+) => {
+  return description.length + title.length + transcript.length;
 };
 
 const api = axios.create({

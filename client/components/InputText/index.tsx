@@ -20,6 +20,11 @@ export const InputText = ({ label, w, helpText, ...props }: InputTextProps) => {
         w={w}
         {...props}
       />
+      {!!helpText && (
+        <C.Text pt="1" fontSize="10px" color="red.400">
+          {helpText}
+        </C.Text>
+      )}
     </FormControl>
   );
 };

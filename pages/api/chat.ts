@@ -15,7 +15,7 @@ export default async function handler(
         Transcrição do Vídeo:
         ${req.body.transcript}
         `;
-    const response = await queryVideo(
+    const response = await chatWithVideo(
       req.headers.api_key as string,
       req.body.query,
       context
@@ -32,7 +32,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // const MODEL_NAME = "gemini-1.5-pro-latest";
 const MODEL_NAME = "gemini-1.0-pro";
 
-async function queryVideo(apiKey: string, query: string, context: string) {
+async function chatWithVideo(apiKey: string, query: string, context: string) {
   const genAI = new GoogleGenerativeAI(apiKey);
 
   const generationConfig = {
@@ -69,23 +69,20 @@ async function queryVideo(apiKey: string, query: string, context: string) {
           },
         ],
       },
-      //   {
-      //     role: "user",
-      //     parts: [{ text: "Hello, I have 2 dogs in my house." }],
-      //   },
-      //   {
-      //     role: "model",
-      //     parts: [{ text: "Great to meet you. What would you like to know?" }],
-      //   },
     ],
     generationConfig: {
       maxOutputTokens: 10000,
     },
   });
 
-  const userMessage = `
-        ${query}
-    `;
+  const count = assistantPrompt.length;
+
+  if (count > 25000)
+    throw new Error(
+      "Vídeo muito longo ou com muito conteúdo. Tente um mais curto"
+    );
+
+  const userMessage = query;
 
   const result = await chat.sendMessage(userMessage);
   const response = await result.response;
