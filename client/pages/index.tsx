@@ -128,7 +128,13 @@ export const PageMain = () => {
     ? ""
     : `${videoChars}/25000 - O limite de tokens é superior ao suportado no momento. Tente com um vídeo mais curto`;
 
-  const onChatShort = async () => {
+  const onChatShort = async (
+    apiKey: string,
+    query: string,
+    title: string,
+    description: string,
+    transcript: string
+  ) => {
     const { response } = await services.chat(
       state.apiKey,
       state.query,
@@ -140,8 +146,9 @@ export const PageMain = () => {
   };
 
   const onChatLong = async () => {
-    const chunksDescription = utils.splitChunks(state.videoTranscript);
-    console.log("[chunksDescription]", chunksDescription);
+    const descriptions = utils.splitChunks(state.videoTranscript);
+
+    console.log("[chunksDescription]", descriptions);
   };
 
   const onChat = async (e: any) => {
@@ -150,7 +157,13 @@ export const PageMain = () => {
       onLoading(true);
       // await onChatLong();
       // return;
-      const { response } = await onChatShort();
+      const { response } = await onChatShort(
+        state.apiKey,
+        state.query,
+        state.videoTitle,
+        state.videoDescription,
+        state.videoTranscript
+      );
       onAddResponse(state.query, "user");
       onAddResponse(response, "model");
       onChange("query", "");
