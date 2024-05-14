@@ -148,8 +148,8 @@ export const PageMain = () => {
     e.preventDefault();
     try {
       onLoading(true);
-      await onChatLong();
-      return;
+      // await onChatLong();
+      // return;
       const { response } = await onChatShort();
       onAddResponse(state.query, "user");
       onAddResponse(response, "model");
@@ -390,9 +390,9 @@ export const PageMain = () => {
               </Chakra.Grid>
             </Chakra.VStack>
           )}
-          <Chakra.HStack
+          <Chakra.VStack
             align="flex-end"
-            spacing="8"
+            spacing="4"
             as="form"
             w="full"
             onSubmit={onChat}
@@ -411,11 +411,10 @@ export const PageMain = () => {
               isLoading={state.isLoading}
               type="submit"
               // isDisabled={isDisabledChat}
-              isDisabled={false}
             >
               Enviar
             </Button>
-          </Chakra.HStack>
+          </Chakra.VStack>
         </Chakra.VStack>
       )}
 
