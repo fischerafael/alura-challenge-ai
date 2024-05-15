@@ -136,34 +136,136 @@ export const PageMain = () => {
     transcript: string
   ) => {
     const { response } = await services.chat(
-      state.apiKey,
-      state.query,
-      state.videoTitle,
-      state.videoDescription,
-      state.videoTranscript
+      apiKey,
+      query,
+      title,
+      description,
+      transcript
     );
     return { response };
   };
 
-  const onChatLong = async () => {
-    const descriptions = utils.splitChunks(state.videoTranscript);
+  const onChatLong = async (
+    apiKey: string,
+    query: string,
+    title: string,
+    description: string,
+    transcript: string
+  ) => {
+    toast({
+      title: "Vídeo Longo...",
+      description:
+        "Sua requisição pode levar mais tempo para ser processada...",
+      colorScheme: "green",
+      duration: 1000,
+      position: "top",
+    });
+    const transcripts = utils.splitChunks(transcript);
 
-    console.log("[chunksDescription]", descriptions);
+    const promises = transcripts.map((transcriptChunk, index) => {
+      const extraIntruction = `\n IMPORTANTÍSSIMO: na resposta, inclua uma linha no topo com o número ${index} seguido de um . e aí sim a resposta.
+      \n
+      exemplo:
+      \n
+      1. resposta da pergunta
+      `;
+      const fullQuery = `${query} \n ${extraIntruction}`;
+      return onChatShort(
+        apiKey,
+        fullQuery,
+        title,
+        description,
+        transcriptChunk
+      );
+    });
+
+    toast({
+      title: "Resultados Obtidos!",
+      description: "Sua pergunta será respondida já já...",
+      colorScheme: "green",
+      duration: 1000,
+      position: "top",
+    });
+
+    const results = await Promise.all(promises);
+    const formattedResults = results.map((res) => {
+      // 1. text
+      const index = res.response.slice(0, 1);
+      const response = res.response.slice(3);
+
+      return {
+        index: Number(index) || 0,
+        response: response || "Resposta não encontrada",
+      };
+    });
+    const sortedResults = formattedResults.sort((a, b) => a.index - b.index);
+    const stringifiedResults = sortedResults
+      .map((res) => res.response)
+      .join(`\n - `);
+
+    const reducePrompt = `
+      - Sua tarefa é responser a <query> com a maior precisão, nível de detalhe e exatidão possível, usando as informações disponíveis no <contexto>.
+      - Desconsidere informações repetidas que possam estar contidas no <contexto>. 
+      - Caso exista algum trecho do <contexto> com mensagens do tipo 'Não foi possível encontrar a resposta', apenas desconsidere aquela parte do <contexto> e continue procurando a resposta em outras partes do <contexto>
+      - Caso de fato você não encontre a resposta da <query> em nenhuma parte do <contexto>, aí sim responda que não foi capaz de encontrar a resposta.
+      - Seja o mais específico e detalhista possível em sua resposta, não deixando nenhum detalhe importante fornecido no contexto de fora
+      - Tente seguir o mesmo padrão do context. Exemplo: se o contexto está em grande parte no formato de lista, retorne a resposta em forma de lista, a menos que a <query> seja específica em relação ao formato da resposta
+
+      <query>
+      ${query}
+      </query>
+
+      <contexto>
+      ${stringifiedResults}
+      </contexto>
+    `;
+
+    const finalResponse = await onChatShort(
+      apiKey,
+      reducePrompt,
+      title,
+      description,
+      ""
+    );
+
+    toast({
+      title: "Sucesso!",
+      description: "Sua resposta foi processada com successo!",
+      colorScheme: "green",
+      duration: 1000,
+      position: "top",
+    });
+
+    return { response: finalResponse.response };
   };
 
   const onChat = async (e: any) => {
     e.preventDefault();
     try {
       onLoading(true);
-      // await onChatLong();
+      const { response } = isBelowMax
+        ? await onChatShort(
+            state.apiKey,
+            state.query,
+            state.videoTitle,
+            state.videoDescription,
+            state.videoTranscript
+          )
+        : await onChatLong(
+            state.apiKey,
+            state.query,
+            state.videoTitle,
+            state.videoDescription,
+            state.videoTranscript
+          );
       // return;
-      const { response } = await onChatShort(
-        state.apiKey,
-        state.query,
-        state.videoTitle,
-        state.videoDescription,
-        state.videoTranscript
-      );
+      // const { response } = await onChatShort(
+      //   state.apiKey,
+      //   state.query,
+      //   state.videoTitle,
+      //   state.videoDescription,
+      //   state.videoTranscript
+      // );
       onAddResponse(state.query, "user");
       onAddResponse(response, "model");
       onChange("query", "");
