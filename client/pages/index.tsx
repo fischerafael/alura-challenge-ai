@@ -122,11 +122,11 @@ export const PageMain = () => {
   );
 
   const isBelowMax = videoChars < 24000;
-  const isValidChat = isBelowMax && !!state.query.length && !!state.apiKey;
+  const isValidChat = !!state.query.length && !!state.apiKey;
   const isDisabledChat = !isValidChat;
   const maxHelp = isBelowMax
     ? ""
-    : `${videoChars}/25000 - O limite de tokens é superior ao suportado no momento. Tente com um vídeo mais curto`;
+    : `${videoChars}/24000 - Respostas para perguntas de vídeos longos (acima de 24k caracteres) podem levar mais tempo para serem processadas e serem menos precisas...`;
 
   const onChatShort = async (
     apiKey: string,
@@ -258,14 +258,6 @@ export const PageMain = () => {
             state.videoDescription,
             state.videoTranscript
           );
-      // return;
-      // const { response } = await onChatShort(
-      //   state.apiKey,
-      //   state.query,
-      //   state.videoTitle,
-      //   state.videoDescription,
-      //   state.videoTranscript
-      // );
       onAddResponse(state.query, "user");
       onAddResponse(response, "model");
       onChange("query", "");
@@ -525,7 +517,7 @@ export const PageMain = () => {
             <Button
               isLoading={state.isLoading}
               type="submit"
-              // isDisabled={isDisabledChat}
+              isDisabled={isDisabledChat}
             >
               Enviar
             </Button>
